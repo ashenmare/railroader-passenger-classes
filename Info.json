@@ -1,0 +1,23 @@
+{
+  "identifier": "ashenmare/passenger-classes",
+  "version": "0.2.0",
+  "name": "Passenger Classes",
+  "author": "ashenmare",
+  "scope": "unscoped",
+  "license": "MIT",
+  "assemblies": [
+    "PassengerClasses.dll"
+  ],
+  "dependencies": {
+    "required": [
+      "rr/game >=0.6.3",
+      "rr/pb-pullman-lw-wood-19xx",
+      "rr/pb-osgbrad-lightweight-steel-1915",
+      "rr/pb-pullman-heavyweight-early"
+    ],
+    "incompatible": [
+      "ashenmare/first-class"
+    ]
+  },
+  "description": "Every passenger car gets a class: coach, parlor, sleeper, lounge or baggage, and observation cars pay their bonus. Includes the First Class twins. Replaces First Class. Every player needs it."
+}
