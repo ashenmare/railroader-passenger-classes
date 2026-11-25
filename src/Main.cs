@@ -41,6 +41,9 @@ namespace PassengerClasses
         public int convertParlorPercent = Logic.DefaultConvertParlorPercent;
         public int convertSleeperPercent = Logic.DefaultConvertSleeperPercent;
         public int heatFarePercent = Logic.DefaultHeatFarePercent;
+        public int fareBase = Logic.DefaultFareBase;
+        public double farePerMile = Logic.DefaultFarePerMile;
+        public int fareCap = Logic.DefaultFareCap;
         public bool steamHeat = true;
         public bool fareLine = true;
         public bool payBreakdown = true;
@@ -179,6 +182,7 @@ namespace PassengerClasses
             Logic.ApplyBaggage(v.bagNearCoachLb, v.bagNearFirstLb, v.bagNearSleeperLb, v.bagFarPercent, v.bagExcessPercent, v.bagFeePer100, v.bagRackLb, v.bagRackParlorLb, v.bagRackSleeperLb, v.bagLuggageLb, v.loungeHours);
             Logic.ApplyConversion(v.convertParlorPercent, v.convertSleeperPercent);
             Logic.ApplyHeat(v.heatFarePercent);
+            Logic.ApplyFares(v.fareBase, v.farePerMile, v.fareCap);
             Logic.ApplySteamHeat(v.steamHeat);
             Logic.ApplyReadouts(v.fareLine, v.payBreakdown);
             Logic.ClassMenu = v.classMenu;
@@ -256,7 +260,7 @@ namespace PassengerClasses
         internal static void LogSettings(string name) =>
             DebugLog.Event(Id, name, "share", Logic.SharePercent, "fare", Logic.FarePercent, "price", Logic.PricePercent,
                 "slShare", Logic.SleeperSharePercent, "slFare", Logic.SleeperFarePercent, "slPrice", Logic.SleeperPricePercent, "slMiles", Logic.SleeperMiles,
-                "obs", Logic.ObservationPercent, "steamHeat", Logic.SteamHeat, "heatFarePercent", Logic.HeatFarePercent, "fareLine", Logic.FareLine, "payBreakdown", Logic.PayBreakdown, "convParlor", Logic.ConvertParlorPercent, "convSleeper", Logic.ConvertSleeperPercent,
+                "obs", Logic.ObservationPercent, "steamHeat", Logic.SteamHeat, "heatFarePercent", Logic.HeatFarePercent, "fareBase", Logic.FareBase, "farePerMile", Logic.FarePerMile, "fareCap", Logic.FareCap, "fareLine", Logic.FareLine, "payBreakdown", Logic.PayBreakdown, "convParlor", Logic.ConvertParlorPercent, "convSleeper", Logic.ConvertSleeperPercent,
                 "packFiles", Logic.ReadPackFiles, "classMenu", Logic.ClassMenu, "refitPercent", Logic.RefitLaborPercent, "refitMinimum", Logic.RefitLaborMinimum, "lounge", Logic.LoungePatience, "loungeHours", Logic.LoungeHours, "bags", Logic.BaggageRiders,
                 "bagCoach", Logic.BagNearCoach, "bagFirst", Logic.BagNearFirst, "bagSleeper", Logic.BagNearSleeper, "bagFar", Logic.BagFarPercent,
                 "bagExcess", Logic.BagExcessPercent, "bagFee", Logic.BagFeePer100, "bagRack", Logic.BagRackLb, "bagRackFirst", Logic.BagRackParlorLb, "bagRackSleeper", Logic.BagRackSleeperLb, "bagLuggage", Logic.BagLuggageLb);
@@ -493,7 +497,7 @@ namespace PassengerClasses
             string version = v == null ? "" : v.Major + "." + v.Minor + "." + v.Build;
             var fields = new Dictionary<string, string>
             {
-                { "settings", "the settings in force: sharePercent, farePercent, pricePercent (first class), sleeperSharePercent, sleeperFarePercent, sleeperPricePercent, observationPercent (the whole-train bonus as a percent), sleeperMiles (the shortest trip with sleeper riders), convertParlorPercent and convertSleeperPercent (the share of its seats a coach keeps when the player makes it a parlor or a sleeper), steamHeat (the whole heat feature, on or off), fareLine and payBreakdown (the car window's Fare line and the stop payment's breakdown line, on or off), heatFarePercent (the cold-weather fare effect, a percent of its set size, 0 off), readPackFiles, loungePatience and loungeHours (the lounge rule), baggageRiders and the bag settings (bagNearCoachLb, bagNearFirstLb, bagNearSleeperLb, bagFarPercent, bagExcessPercent, bagFeePer100, bagRackLb, bagRackParlorLb, bagRackSleeperLb, bagLuggageLb)" },
+                { "settings", "the settings in force: sharePercent, farePercent, pricePercent (first class), sleeperSharePercent, sleeperFarePercent, sleeperPricePercent, observationPercent (the whole-train bonus as a percent), sleeperMiles (the shortest trip with sleeper riders), convertParlorPercent and convertSleeperPercent (the share of its seats a coach keeps when the player makes it a parlor or a sleeper), steamHeat (the whole heat feature, on or off), fareBase, farePerMile and fareCap (the coach fare: dollars up to 2 miles, dollars a mile past that, and the most; fareCap is null for Unlimited), fareLine and payBreakdown (the car window's Fare line and the stop payment's breakdown line, on or off), heatFarePercent (the cold-weather fare effect, a percent of its set size, 0 off), readPackFiles, loungePatience and loungeHours (the lounge rule), baggageRiders and the bag settings (bagNearCoachLb, bagNearFirstLb, bagNearSleeperLb, bagFarPercent, bagExcessPercent, bagFeePer100, bagRackLb, bagRackParlorLb, bagRackSleeperLb, bagLuggageLb)" },
                 { "classes", "the class words a car can have" },
                 { "cars", "each passenger car, and each car with a class (baggage cars): id (car id), definition (definition id), class, classSource (default, built-in, pack file or player), observation, and for a passenger car seats and seatsUsed; baggageLb when a pack gave the car a baggage figure; for a first-class or sleeper car firstClassSeatsUsed or sleeperBerthsUsed and noRoomSinceArrival (riders of its class who found no seat or berth since it last pulled into a station); heatEffectPercent and heatEffect (words) when the cold-weather fare moves this passenger car's fare now; heatEffect alone, \"Heated\", in the cold months when Realistic Steam and Fuel Use's heat is not in play" },
                 { "today", "the game day so far, from the host's own boarding and fares: day, known, partial, total (the whole railroad), stations and trains, each with boarded riders by class, gameFare and extra and heatFare by class, bagFees, paid (not on a train), left-behind counts (noRoom, noBerth, heldForBags, gaveUp) and the fare band of each (bands); stationsFull and trainsFull when a day passed the row limits. Counting starts at a world load; nothing is saved" },
@@ -552,6 +556,10 @@ namespace PassengerClasses
             var fields = new[]
             {
                 SettingField.Int("sharePercent", "First-class riders (% of each crowd)", Logic.DefaultSharePercent, Logic.MinSharePercent, Logic.MaxSharePercent, 5, true, "How many riders want first class."),
+                SettingField.Int("fareBase", "Coach fare, short trips ($)", Logic.DefaultFareBase, Logic.MinFareBase, Logic.MaxFareBase, 1, true, "The fare up to 2 miles."),
+                SettingField.Float("farePerMile", "Coach fare, each mile past 2 (cents a mile)", Logic.DefaultFarePerMile, Logic.MinFarePerMile, Logic.MaxFarePerMile, 0.01, Logic.FarePerMileDecimals, true, "The game's own is 14.6.").ShownAs(100, 1),
+                SettingField.IntSlider("fareCap", "Coach fare, most ($)", Logic.DefaultFareCap, Logic.MinFareCap, Logic.UnlimitedFareCap, 1, true, "The last stop is Unlimited.", "$1", "Unlimited")
+                    .BubbleText((v, st) => v >= Logic.UnlimitedFareCap ? "Unlimited" : "$" + (int)Math.Round(v)),
                 SettingField.Int("farePercent", "First-class fare (% of the coach fare)", Logic.DefaultFarePercent, Logic.MinFarePercent, Logic.MaxFarePercent, 5, true, "What a first-class rider pays."),
                 SettingField.Int("pricePercent", "First-class car price (% of the stock car)", Logic.DefaultPricePercent, Logic.MinPricePercent, Logic.MaxPricePercent, 5, true, "What a first-class car costs."),
                 SettingField.Int("sleeperSharePercent", "Sleeper riders (% of each crowd)", Logic.DefaultSleeperSharePercent, Logic.MinSharePercent, Logic.MaxSharePercent, 1, true, "How many riders want a sleeper."),

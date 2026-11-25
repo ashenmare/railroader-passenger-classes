@@ -294,6 +294,48 @@ namespace PassengerClasses
             return (int)Math.Round(v);
         }
 
+        // ---- the coach fare (0.3.0) ----
+        // The game's coach fare is $1 up to 2 miles, then linear to $8 at 50 miles, then $8. Three settings own it now: the fare at 2 miles and under, the dollars
+        // a mile past 2, and a cap (the last step of its slider, 51, is Unlimited). The defaults (1, 7/48, 8) are the game's own, whole dollars like the game's.
+        // fare = Round(base + perMile x max(0, miles - 2)), held to the cap unless it is Unlimited.
+        internal const int DefaultFareBase = 1, MinFareBase = 0, MaxFareBase = 50;
+        internal const double DefaultFarePerMile = 7.0 / 48.0, MinFarePerMile = 0, MaxFarePerMile = 20;
+        internal const int DefaultFareCap = 8, MinFareCap = 1, MaxFareCap = 50, UnlimitedFareCap = 51;      // 51 and over: no cap
+        internal const int FarePerMileDecimals = 6;                // the settings screen saves the rate to this many decimals
+        internal static int FareBase = DefaultFareBase, FareCap = DefaultFareCap;
+        internal static double FarePerMile = DefaultFarePerMile;
+
+        // A rate that reads as the default at the screen's own decimals IS the default (7/48 saved as 0.145833 must still pay the game's fares).
+        internal static double SnapPerMile(double v)
+        {
+            if (double.IsNaN(v) || double.IsInfinity(v)) return DefaultFarePerMile;
+            v = Math.Max(MinFarePerMile, Math.Min(MaxFarePerMile, v));
+            return Math.Round(v, FarePerMileDecimals) == Math.Round(DefaultFarePerMile, FarePerMileDecimals) ? DefaultFarePerMile : v;
+        }
+
+        internal static void ApplyFares(int baseFare, double perMile, int cap)
+        {
+            FareBase = Clamp(baseFare, MinFareBase, MaxFareBase);
+            FarePerMile = SnapPerMile(perMile);
+            FareCap = Clamp(cap, MinFareCap, UnlimitedFareCap);
+        }
+
+        internal static bool FaresAreGames() => FareBase == DefaultFareBase && FarePerMile == DefaultFarePerMile && FareCap == DefaultFareCap;
+
+        // The coach fare for a trip, whole dollars. Worked in the game's own float steps (t = (miles - 2) / 48, then base + (perMile x 48) x t) and rounded the way
+        // Mathf.RoundToInt does (Math.Round, halves to even), so the defaults give the game's number for every distance, not only to within a cent. NaN miles: the base.
+        internal static int CoachFare(float miles) => CoachFare(miles, FareBase, FarePerMile, FareCap);
+        internal static int CoachFare(float miles, int baseFare, double perMile, int cap)
+        {
+            float over = miles - 2f;
+            if (!(over > 0f)) over = 0f;
+            float t = over / 48f;
+            float v = (float)baseFare + (float)(perMile * 48.0) * t;
+            if (cap < UnlimitedFareCap) v = Math.Min(v, (float)cap);
+            if (v > 1000000f) v = 1000000f;
+            return (int)Math.Round(v);
+        }
+
         // Pounds of checked bags one rider brings, by fare band and the class of the car (0 coach, 1 first class, 2 sleeper). Halves round up.
         internal static int Allowance(int band, int cls)
         {

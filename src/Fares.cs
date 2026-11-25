@@ -31,7 +31,7 @@ namespace PassengerClasses
 
         private static bool _heatDown;      // the heat fare stood down (it failed three times); reset on world load
 
-        internal static void ResetWorld() { _failures = 0; Pending.Clear(); _heatDown = false; _heatFailures = 0; _splitDown = false; _splitFailures = 0; _receipt = null; Heat.Reset(); Ride.Reset(); _rideKey = null; }
+        internal static void ResetWorld() { _failures = 0; Pending.Clear(); _heatDown = false; _heatFailures = 0; _splitDown = false; _splitFailures = 0; _baseDown = false; _baseFailures = 0; _receipt = null; Heat.Reset(); Ride.Reset(); _rideKey = null; }
 
         // Multiplayer.Broadcast(string) is public static void: it logs the text, then shows it as a console alert on the host and sends it to every client; the game's own PayPassengerFare calls it for the payment line [load, optional]
         private static MethodInfo _broadcast;
@@ -44,11 +44,13 @@ namespace PassengerClasses
             var ps = typeof(PassengerStop);
             MethodInfo q = AccessTools.Method(ps, "QueuePayment", new[] { typeof(int), typeof(string), typeof(string), typeof(float) });
             if (q == null || q.ReturnType != typeof(void)) return "PassengerStop.QueuePayment";
+            if (q.GetParameters()[3].Name != "bonusMultiplier") return "PassengerStop.QueuePayment (bonusMultiplier)";
             MethodInfo p = AccessTools.Method(ps, "PayPassengerFare", new[] { typeof(int), typeof(int) });
             if (p == null || p.ReturnType != typeof(void) || p.GetParameters()[1].Name != "amount") return "PassengerStop.PayPassengerFare";
             FieldInfo f = AccessTools.Field(ps, "_pendingPayment");
             FieldInfo a = f?.FieldType.GetField("Amount", BindingFlags.Public | BindingFlags.Instance);
             if (f == null || a == null || a.FieldType != typeof(float)) return "PassengerStop._pendingPayment.Amount";
+            if (!f.FieldType.IsClass) return "PassengerStop._pendingPayment (a class)";
             // The breakdown line is optional: without Multiplayer.Broadcast(string) (the console line the game itself posts for each payment) it is simply never made.
             MethodInfo b = typeof(Network.Multiplayer).GetMethod("Broadcast", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
             _broadcast = b != null && b.ReturnType == typeof(void) ? b : null;
@@ -120,9 +122,10 @@ namespace PassengerClasses
 
         private static int Percent() => Boarding.ServingClass == 2 ? Logic.SleeperFarePercent : Logic.FarePercent;
 
-        internal static void QueuePostfix(PassengerStop __instance, float __state, string originId, string destinationId, int count)
+        internal static void QueuePostfix(PassengerStop __instance, float __state, string originId, string destinationId, int count, float bonusMultiplier)
         {
             if (!Live) return;
+            if (!_baseDown && !Logic.FaresAreGames()) BaseFare(__instance, originId, destinationId, bonusMultiplier);     // before the reads below, so every part sees the set fare
             double game = 0, extra = 0, heat = 0, bagFee = 0;
             if (!float.IsNaN(__state))
             {
@@ -154,6 +157,37 @@ namespace PassengerClasses
             if (Logic.BaggageRiders) bagFee = BagFee(__instance, originId, destinationId, count);
             if (!Daily.Off && (game > 0 || bagFee > 0)) DayFare(__instance, game, extra, bagFee, heat);
             if (SplitWanted()) Track(__instance, game, extra, heat, bagFee);
+        }
+
+        // PassengerStop.QueuePayment's last parameter is named bonusMultiplier (a float) and the pending total _pendingPayment is a class, so its public float Amount can be written in place; QueuePayment adds the fare for one rider group once, whatever the count (always 1) [load]
+        private static bool _baseDown;      // the coach fare settings stood down (three failures): the game's own fare stands; reset on world load
+        private static int _baseFailures;
+
+        // The coach fare settings (0.3.0, Logic.CoachFare): the game has just added its own fare for this rider (the miles band, whole dollars, times the observation
+        // bonus) to the station's pending total; the difference to the fare the settings give, times the same bonus, is added to the same total. So the one payment,
+        // the class extra, the heat, the breakdown and the day book all work on the set fare, and the defaults (no difference) change nothing. Never throws.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void BaseFare(PassengerStop stop, string originId, string destinationId, float bonus)
+        {
+            try
+            {
+                float miles = Boarding.MilesBetween(originId, destinationId);
+                if (float.IsNaN(miles)) return;                  // no route: the game added no fare either
+                int game = Logic.FareBand(miles), set = Logic.CoachFare(miles);
+                if (set == game) return;
+                float add = ((float)set - (float)game) * bonus;
+                float now = Amount(stop);
+                if (_pendingRef != null && _amountRef != null) _amountRef(_pendingRef(stop)) = now + add;
+                else _amount.SetValue(_pending.GetValue(stop), now + add);
+                if (DebugLog.On) DebugLog.Event(Main.Id, "base-fare", "stop", stop.identifier, "from", originId, "to", destinationId, "miles", miles, "game", game, "set", set, "bonus", bonus, "added", add);
+            }
+            catch (Exception ex)
+            {
+                _baseFailures++;
+                if (DebugLog.On) DebugLog.Event(Main.Id, "failed", "where", "base-fare", "what", "setting the coach fare", "type", ex.GetType().Name, "n", _baseFailures);
+                Main.WarnOnce("base-fare", "Passenger Classes: the coach fare settings failed, the game's own fare stands: " + PathClean.CleanText(ex.Message));
+                if (_baseFailures >= 3) { _baseDown = true; Main.WarnOnce("base-down", "Passenger Classes: the coach fare settings stand down until the next world load"); }
+            }
         }
 
         // Whether the stop's payment breakdown is being kept: its setting is on, the console line can be posted, and it has not stood down.

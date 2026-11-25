@@ -1,4 +1,4 @@
-Passenger Classes 0.2.0 feeds (passenger-classes api 1, first-class api 1)
+Passenger Classes 0.3.0 feeds (passenger-classes api 1, first-class api 1)
 
 Two read-only feeds, for other mods and Railroad Books. Plain data (dictionaries, lists and numbers), main thread, changes nothing, a new
 answer every call (except `today` and `yesterday`: read-only objects that are handed out again until a figure changes; do not change them). Read them through Mod Feeds (ModFeeds.Read("passenger-classes")) or by reflection on PassengerClasses.Api.Read() and
@@ -57,6 +57,9 @@ The passenger-classes feed declares twelve Mod Feeds columns, so a reader that s
 | `fareLine` | bool | the Fare line in the car window, on or off; added in 0.2.0 |
 | `payBreakdown` | bool | the breakdown line a stop's payment gets, on or off; added in 0.2.0 |
 | `heatFarePercent` | int | the cold-weather fare effect as a percent of its set size (100 as set, 0 off); added in 0.2.0 |
+| `fareBase` | int | the coach fare up to 2 miles, dollars (1 as the game's); added in 0.3.0 |
+| `farePerMile` | number | the coach fare's rise for each mile past 2, dollars (7/48, about 0.1458, as the game's); added in 0.3.0 |
+| `fareCap` | int or null | the most a coach fare is, dollars (8 as the game's); null for Unlimited; added in 0.3.0 |
 | `readPackFiles` | bool | whether a pack's PassengerClasses.json is read |
 | `loungePatience` | bool | the lounge rule (transfer riders off a train with a lounge car wait longer); off by default |
 | `loungeHours` | int | the extra hours of patience |
@@ -130,7 +133,7 @@ The group, in `total`, in every station row and (without `paid`) in every train 
 | Key | Type | Meaning |
 |---|---|---|
 | `boarded` | object | riders who boarded, by the class of the car: `coach`, `first`, `sleeper` (ints; `first` is a parlor car). The game's own count of what each car received, counted per boarding leg at the boarding station: a rider who changes trains counts at each boarding (`left` is counted the same way). The fares and `paid` follow the game's ledger: once, at the arrival station, by the last car's class |
-| `gameFare` | object | dollars: the game's own fare for the riders who got off, by the class of the car they rode, `coach`, `first`, `sleeper` (any observation-car bonus is already in it; it is not counted separately) |
+| `gameFare` | object | dollars: the game's own fare for the riders who got off, by the class of the car they rode, `coach`, `first`, `sleeper` (any observation-car bonus is already in it; it is not counted separately; from 0.3.0 it is the fare the coach fare settings give) |
 | `extra` | object | dollars: the extra this mod added, `first` and `sleeper` |
 | `heatFare` | object | dollars: what the cold-weather fare added, by class (`coach`, `first`, `sleeper`); negative for unheated cars in the cold, zero without Realistic Steam and Fuel Use's passenger heat; added in 0.2.0 |
 | `bagFees` | number | dollars: excess-baggage fees accrued (with baggage on) |

@@ -31,7 +31,7 @@ namespace PassengerClasses
                     { "sharePercent", Logic.SharePercent }, { "farePercent", Logic.FarePercent }, { "pricePercent", Logic.PricePercent },
                     { "sleeperSharePercent", Logic.SleeperSharePercent }, { "sleeperFarePercent", Logic.SleeperFarePercent }, { "sleeperPricePercent", Logic.SleeperPricePercent },
                     { "observationPercent", Logic.ObservationPercent }, { "sleeperMiles", Logic.SleeperMiles },
-                    { "convertParlorPercent", Logic.ConvertParlorPercent }, { "convertSleeperPercent", Logic.ConvertSleeperPercent }, { "heatFarePercent", Logic.HeatFarePercent }, { "steamHeat", Logic.SteamHeat }, { "fareLine", Logic.FareLine }, { "payBreakdown", Logic.PayBreakdown },
+                    { "convertParlorPercent", Logic.ConvertParlorPercent }, { "convertSleeperPercent", Logic.ConvertSleeperPercent }, { "heatFarePercent", Logic.HeatFarePercent }, { "fareBase", Logic.FareBase }, { "farePerMile", Logic.FarePerMile }, { "fareCap", Logic.FareCap >= Logic.UnlimitedFareCap ? null : (object)Logic.FareCap }, { "steamHeat", Logic.SteamHeat }, { "fareLine", Logic.FareLine }, { "payBreakdown", Logic.PayBreakdown },
                     { "readPackFiles", Logic.ReadPackFiles }, { "loungePatience", Logic.LoungePatience }, { "baggageRiders", Logic.BaggageRiders },
                     { "loungeHours", Logic.LoungeHours }, { "bagNearCoachLb", Logic.BagNearCoach }, { "bagNearFirstLb", Logic.BagNearFirst }, { "bagNearSleeperLb", Logic.BagNearSleeper },
                     { "bagFarPercent", Logic.BagFarPercent }, { "bagExcessPercent", Logic.BagExcessPercent }, { "bagFeePer100", Logic.BagFeePer100 }, { "bagRackLb", Logic.BagRackLb },

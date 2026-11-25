@@ -2,7 +2,7 @@
 
 **Nexus Mods** https://www.nexusmods.com/railroader/mods/2412
 
-This is the source of Passenger Classes 0.2.0. The ready-made zip is on the Nexus page.
+This is the source of Passenger Classes 0.3.0. The ready-made zip is on the Nexus page.
 
 Built for Railroader 0.6.3.
 
@@ -39,7 +39,7 @@ HOW A CAR GETS ITS CLASS (the first that says something wins, one field at a tim
 4. A car with a passenger slot is a coach. Anything else has no class.
 
 ## What each class does
-- Coach: nothing special. The game's own boarding and fare.
+- Coach: nothing special. The game's own boarding, and its fare unless you change it (COACH FARE below).
 - Parlor (first class): 15% of each crowd (a setting) wants first class. They board a parlor car before anyone and pay 200% of the fare
   (a setting). A parlor takes only its own riders: it runs part empty by design, and it is not a bigger coach. The seats are the car's
   own. The twins have 70% of the stock car's seats and cost 120% (settings change the price live, the seats are in the car).
@@ -52,6 +52,19 @@ HOW A CAR GETS ITS CLASS (the first that says something wins, one field at a tim
   patience: the game drops a rider who waits to transfer more than 4 hours after boarding, and these wait 1 hour longer (a setting). It moves
   the time the game reads, so it adds to Patient Passengers' and Station Upgrades' own extra time. Off by default ("Lounge cars" in the settings).
 - Baggage: see below. Off by default ("Riders bring baggage" in the settings).
+
+## Coach fare
+Three settings own the coach fare, the one every other class is a percent of. The game's is $1 up to 2 miles, rising in a straight line to $8 at 50 miles, then $8
+for any trip longer. Here: "Coach fare, short trips ($)" is the fare up to 2 miles (default 1), "Coach fare, each mile past 2 (cents a mile)" is the rise (default 7/48 of a dollar, 14.6 cents; the screen shows and takes cents, the file keeps dollars: farePerMile 0.145833),
+and "Coach fare, most ($)" holds the fare down (default 8). The cap is a slider from $1 up, and its last stop is Unlimited, where long trips keep earning by the mile.
+The fare is Round(short-trip fare + rate x miles past 2), held to the cap, in whole dollars, rounded as the game does (a half goes to the even dollar: 4.5 is 4, 5.5 is 6).
+With the defaults it is the game's own number for every distance (checked against the game's own formula over a dense range). A rate that shows as 14.6 cents counts as the default (typed 14.6 is the exact 7/48, and 0.145833 in the file is read as it), so
+saving the settings screen does not move any fare. The slider's handle says Unlimited at its last stop and the dollars below it. Unlimited is saved as 51 (a larger saved value reads as Unlimited too). A cap below the short-trip fare
+caps that too. The first-class and sleeper percents, the observation bonus and the cold-weather effect work on the set fare exactly as before, and the payment, the fare breakdown line and the feed's
+day figures show it. The feed's settings carry fareBase, farePerMile and fareCap (null when Unlimited). The Fare line names percents, not dollars, so it needs no change.
+Baggage allowances still go by the game's own $1 to $8 distance bands (the same trip lengths as before), whatever the dollars come to, and so does the sleeper distance rule.
+Only the host works fares, so the host's three settings decide in multiplayer. The difference is added to the game's own pending fare for each rider as they get off; if it ever fails
+three times, the settings stand down until the next load and the game's own fare is paid. Only the game can show the three rows on the settings screen, and the slider's value text.
 
 ## Steam heat and cold-weather fares
 "Steam heat" in the settings (on by default) switches the whole feature. Off, there is no heat line on a car and no heat effect on fares, with or without
@@ -131,7 +144,7 @@ holds 40,000 lb of bags (the game's own slot for it is a mail load nothing uses)
 
 BAGGAGE (off by default)
 The shop lists the stock baggage car's capacity as 1,000: that is the game's unused mail slot. This mod gives it 40,000 lb of baggage room.
-Riders bring checked bags by the fare they pay (the game's $1 to $8 distance fare) and the class of the car they sit in:
+Riders bring checked bags by the fare band of their trip (the game's $1 to $8 distance bands, whatever the coach fare settings pay) and the class of the car they sit in:
     fare        coach     first class   sleeper
     $1 and $2   none      none          none
     $3 to $5    25 lb     50 lb         100 lb
@@ -176,6 +189,7 @@ skipped, with one line in the log. Most packs need no file: the type codes above
 right-click menu (once "Change car classes" is on). Only cars of the pack the file sits in are read from it.
 
 SETTINGS (Preferences > Mods, all take effect at once except the seats)
+The coach fare: short trips, each mile past 2, and the most (Unlimited at the top).
 Change car classes (right-click menu). Refit labor and its minimum. First-class riders, fare and car price. The share of its seats a coach keeps made a parlor or a sleeper. Sleeper riders, fare, car price and shortest trip. The observation bonus. Reading pack files. The
 Steam heat and Cold-weather fares. The Fare line and the fare breakdown switches. Lounge switch and its extra hours. The baggage switch, the bags by fare and class, the share bringing double, the fee, the racks by class and the luggage area. Also "Debug log (for bug reports)" (see DEBUG LOG).
 
@@ -223,6 +237,8 @@ Sell your first-class and sleeper cars first. A car whose definition is missing 
 save, with a message from the game. The rest of the save is unaffected. Class choices and settings stay in the mod's folder.
 
 ## Changes
+0.3.0:
+Added the coach fare as three settings: the fare up to 2 miles, the rise a mile past that, and a cap with an Unlimited step. The defaults are the game's own fares.
 0.2.0: First release.
 Added classes for every passenger car, set by the player, a pack file or the built-in table.
 Added the observation bonus for every observation car.
